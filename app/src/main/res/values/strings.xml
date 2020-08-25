@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">bnr7_with_butterknife</string>
+    <string name="crimeHint">Enter the crime title</string>
+    <string name="CrimeTitle">Title</string>
+    <string name="CrimeDate">Date of Crime</string>
+    <string name="CrimeSolved">Solved</string>
+    <string name="date_picker_title">Date of crime:</string>
+</resources>
