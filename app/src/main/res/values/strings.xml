@@ -3,6 +3,17 @@
     <string name="crimeHint">Enter the crime title</string>
     <string name="CrimeTitle">Title</string>
     <string name="CrimeDate">Date of Crime</string>
+    <string name="CrimeTime">Time of Crime</string>
     <string name="CrimeSolved">Solved</string>
     <string name="date_picker_title">Date of crime:</string>
+    <string name="time_picker_title">Time of crime:</string>
+    <string name="add_crime">add crime</string>
+    <string name="show_subtitle">Show subtitle</string>
+    <string name="hide_subtitle">Hide subtitle</string>
+    <string name="delete_crime">Hide subtitle</string>
+    <string name="empty_list_text">This list is Empty</string>
+    <plurals name="crime_format">
+        <item quantity="one">%1$d crime</item>
+        <item quantity="other">%1$d crimes</item>
+    </plurals>
 </resources>

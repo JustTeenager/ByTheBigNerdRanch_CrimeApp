@@ -4,7 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:layout_margin="16dp"
     tools:context=".CrimeFragment">
 
     <TextView
@@ -33,6 +32,13 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="@string/CrimeDate"/>
+
+    <Button
+        android:id="@+id/crime_time_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/CrimeTime"/>
 
     <CheckBox
         android:id="@+id/CheckBox"

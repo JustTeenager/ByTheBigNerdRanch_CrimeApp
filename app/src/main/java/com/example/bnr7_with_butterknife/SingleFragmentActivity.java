@@ -6,8 +6,9 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 /**
- * Abstract Class for (OMG!) Activities with single fragment
- * idk what to say rly
+ * Abstract Class for (OMG!) Activities with a single fragment
+ * @see CrimeActivity
+ * @see DatePickerActivity
  */
 
 public abstract class SingleFragmentActivity extends AppCompatActivity {

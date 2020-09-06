@@ -47,6 +47,12 @@ public class CrimePagerActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     *
+     * @param context needs for intent
+     * @param id shows us which crime we need to setup
+     * @return the intent we receive
+     */
     public static Intent newIntent(Context context, UUID id){
         Intent intent=new Intent(context,CrimePagerActivity.class);
         intent.putExtra(KEY_TO_CRIME,id);
