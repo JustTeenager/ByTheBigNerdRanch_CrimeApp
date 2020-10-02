@@ -56,7 +56,9 @@ public class CrimeActivity extends SingleFragmentActivity implements CrimeListFr
      */
     @Override
     public void onDetailDeleted() {
-        Fragment fragment=getSupportFragmentManager().findFragmentById(R.id.fragment_detail_container);
-        getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+        if (findViewById(R.id.fragment_detail_container)!=null) {
+            Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_detail_container);
+            getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+        }
     }
 }
