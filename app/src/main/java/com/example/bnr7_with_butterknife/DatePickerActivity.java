@@ -14,6 +14,10 @@ public class DatePickerActivity extends SingleFragmentActivity {
 
     public static final String KEY_TO_DATE_INTENT="key_to_date_intent";
 
+    /**
+     * Creates a {@DatePickerFragment} and puts into args of fragment date we suppose to show
+     * @return DatePickerFragment
+     */
     @Override
     protected Fragment createFragment() {
         return DatePickerFragment.newInstance((Date) getIntent().getSerializableExtra(KEY_TO_DATE_INTENT));

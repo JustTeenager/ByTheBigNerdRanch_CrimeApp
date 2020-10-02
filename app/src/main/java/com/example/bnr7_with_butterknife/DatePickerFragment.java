@@ -56,6 +56,10 @@ public class DatePickerFragment extends DialogFragment {
         else return super.onCreateView(inflater, container, savedInstanceState);
     }
 
+    /**
+     * Inits the calendar,same both on big and small screens
+     * @return
+     */
     private Calendar InitializeCalendar() {
         Date date = (Date) getArguments().get(KEY_TO_DATE);
         Calendar calendar = Calendar.getInstance();
@@ -86,6 +90,11 @@ public class DatePickerFragment extends DialogFragment {
         else return super.onCreateDialog(savedInstanceState);
     }
 
+    /**
+     * send results back to {@CrimeFragment}
+     * @param resultCode
+     * @param date
+     */
     private void sendResult(int resultCode,Date date){
         Intent intent=new Intent();
         intent.putExtra(KEY_TO_EXTRA_DATE,date);

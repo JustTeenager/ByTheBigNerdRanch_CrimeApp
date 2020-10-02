@@ -1,10 +1,12 @@
 package com.example.bnr7_with_butterknife;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.text.format.DateFormat;
@@ -16,9 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
@@ -36,11 +36,28 @@ public class CrimeListFragment extends Fragment {
     TextView mEmptyTextView;
 
     private Unbinder unbinder;
-    private int mItemToUpdate=-1;
     private boolean mIsSubtitleShown=false;
+    //Bundle key
     private static final String KEY_TO_TITLEVIS="titlevisState";
 
+    //Activity that we need to use for CallBack
+    private Callbacks mActivityCallback;
+
+    //RecyclerView Adapter
     private CrimeAdapter mCrimeAdapter;
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        mActivityCallback= (Callbacks) context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mActivityCallback=null;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -53,7 +70,45 @@ public class CrimeListFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_crime_list, container, false);
         unbinder = ButterKnife.bind(this, view);
         mCrimeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        setHasOptionsMenu(true);
+        updateUI();
+        /**
+         * Provides swipe-delete
+         */
+        ItemTouchHelper helper=new ItemTouchHelper(new ItemTouchHelper.Callback() {
+            @Override
+            public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                int vertFlags=ItemTouchHelper.UP | ItemTouchHelper.DOWN;
+                int horFlags = ItemTouchHelper.RIGHT;
+                return makeMovementFlags(vertFlags,horFlags);
+            }
+
+            @Override
+            public boolean isLongPressDragEnabled() {
+                return false;
+            }
+
+            @Override
+            public boolean isItemViewSwipeEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                    CrimeHolder holder = (CrimeHolder) viewHolder;
+                    mCrimeAdapter.mCrimes.remove(viewHolder.getAdapterPosition());
+                    CrimeLab.getCrimeLab(getActivity()).deleteCrime(holder.mCrime);
+                    mCrimeAdapter.notifyItemRemoved(viewHolder.getAdapterPosition());
+                    updateEmptyTitleVis();
+                    mActivityCallback.onDetailDeleted();
+            }
+        });
+        helper.attachToRecyclerView(mCrimeRecyclerView);
+        setHasOptionsMenu(true); //Toolbar sign
         return view;
     }
 
@@ -66,6 +121,8 @@ public class CrimeListFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.list_menu,menu);
+        MenuItem item=menu.findItem(R.id.subtitle);
+        item.setTitle(mIsSubtitleShown ? getResources().getString(R.string.hide_subtitle) : getResources().getString(R.string.show_subtitle));
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -73,8 +130,10 @@ public class CrimeListFragment extends Fragment {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
             case R.id.addCrime:{
-                Intent intent = CrimePagerActivity.newIntent(getActivity(),CrimeLab.getCrimeLab(getActivity()).addCrime());
-                startActivity(intent);
+                //Intent intent = CrimePagerActivity.newIntent(getActivity(),CrimeLab.getCrimeLab(getActivity()).addCrime().getId());
+                //startActivity(intent);
+                updateUI();
+                mActivityCallback.onItemSelected(CrimeLab.getCrimeLab(getActivity()).addCrime());
                 return true;
             }
 
@@ -82,7 +141,6 @@ public class CrimeListFragment extends Fragment {
                 //changes the subtitle vis and text
                 mIsSubtitleShown=!mIsSubtitleShown;
                 updateTitle();
-                item.setTitle(mIsSubtitleShown ? getResources().getString(R.string.hide_subtitle) : getResources().getString(R.string.show_subtitle));
                 getActivity().invalidateOptionsMenu();
                 return true;
             }
@@ -91,12 +149,18 @@ public class CrimeListFragment extends Fragment {
         }
     }
 
+    /**
+     * Updates Title of list whenever {@Crime} was added or deleted
+     */
     private void updateEmptyTitleVis(){
         if (CrimeLab.getCrimeLab(getActivity()).getCrimes().size()!=0)
             mEmptyTextView.setVisibility(TextView.GONE);
         else mEmptyTextView.setVisibility(TextView.VISIBLE);
     }
 
+    /**
+     * Updates subtitle state
+     */
     private void updateTitle(){
         String title=getResources().getQuantityString(R.plurals.crime_format,CrimeLab.getCrimeLab(getActivity()).getCrimes().size(),CrimeLab.getCrimeLab(getActivity()).getCrimes().size());
         if (!mIsSubtitleShown) title=null;
@@ -117,23 +181,20 @@ public class CrimeListFragment extends Fragment {
         unbinder.unbind();
     }
 
-    private void updateUI(){
+    /**
+     * Updates Adapters list of Crimes whenever its updated
+     */
+    public void updateUI(){
         if (mCrimeAdapter==null) {
-            mCrimeAdapter = new CrimeAdapter((LinkedHashMap<UUID, Crime>) CrimeLab.getCrimeLab(getActivity()).getCrimes());
+            mCrimeAdapter = new CrimeAdapter(CrimeLab.getCrimeLab(getActivity()).getCrimes());
             mCrimeRecyclerView.setAdapter(mCrimeAdapter);
         }
-        else if (mItemToUpdate>-1) {
-            // idk how can i do it right
-            // the problem is when i click delete on CrimeFragment the adapter do not know
-            // what exactly i did:changed element or deleted it
-            // so i decided to notify both
-            //and in somehow worked out lol
-            mCrimeAdapter.notifyItemRemoved(mItemToUpdate);
-            mCrimeAdapter.notifyItemRangeChanged(mItemToUpdate,CrimeLab.getCrimeLab(getActivity()).getCrimes().size());
-            mCrimeAdapter.notifyItemChanged(mItemToUpdate);
-            mItemToUpdate=-1;
+        else {
+            List<Crime> crimes=CrimeLab.getCrimeLab(getActivity()).getCrimes();
+            mCrimeAdapter.setCrimes(crimes);
+            mCrimeAdapter.notifyDataSetChanged();
         }
-        else mCrimeAdapter.notifyDataSetChanged();
+        updateEmptyTitleVis();
     }
 
     //so cool Kappa
@@ -143,8 +204,16 @@ public class CrimeListFragment extends Fragment {
     }
 
 
+    /**
+     * CrimeHolder for the RecyclerView from this class
+     * @see {R.layout.crime_list_item.xml}
+     */
     class CrimeHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
+
+        public Crime getCrime() {
+            return mCrime;
+        }
 
         //binds another crime every time
         private Crime mCrime;
@@ -167,11 +236,13 @@ public class CrimeListFragment extends Fragment {
         //go for details of crime
         @Override
         public void onClick(View v) {
-            Intent intent=CrimePagerActivity.newIntent(getActivity(),mCrime.getId());
-            mItemToUpdate=this.getAdapterPosition();
-            startActivity(intent);
+            mActivityCallback.onItemSelected(mCrime);
         }
 
+        /**
+         * sets params for each crime in list
+         * @param crime crime that include params we need
+         */
         private void bind(Crime crime){
             mCrime = crime;
             mCrimeTitle.setText(mCrime.getTitle());
@@ -180,12 +251,19 @@ public class CrimeListFragment extends Fragment {
         }
     }
 
-
     private class  CrimeAdapter extends RecyclerView.Adapter<CrimeHolder>{
 
-        private LinkedHashMap<UUID,Crime> mCrimes;
-        public CrimeAdapter(Map<UUID,Crime> crimes) {
-            mCrimes= (LinkedHashMap<UUID, Crime>) crimes;
+        private List<Crime> mCrimes;
+        public CrimeAdapter(List<Crime> crimes) {
+            setCrimes(crimes);
+        }
+
+        public void setCrimes(List<Crime> crimes){
+            this.mCrimes=crimes;
+        }
+
+        public List<Crime> getCrimes() {
+            return mCrimes;
         }
 
         @Override
@@ -197,12 +275,17 @@ public class CrimeListFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull CrimeHolder holder, int position) {
-            holder.bind((Crime) CrimeLab.getCrimeLab(getActivity()).getCrimes().values().toArray()[position]);
+            holder.bind(CrimeLab.getCrimeLab(getActivity()).getCrimes().get(position));
         }
 
         @Override
         public int getItemCount() {
             return mCrimes.size();
         }
+    }
+
+    public interface Callbacks{
+        void onItemSelected(Crime crime);
+        void onDetailDeleted();
     }
 }
