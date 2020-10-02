@@ -53,6 +53,7 @@ public class CrimeActivity extends SingleFragmentActivity implements CrimeListFr
 
     /**
      * Deletes the detail {@CrimeFargment} fragment when we delete a crime on big screen
+     *
      */
     @Override
     public void onDetailDeleted() {
